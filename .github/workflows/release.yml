@@ -1,0 +1,32 @@
+name: Release
+
+# Push a tag vX.Y.Z (matching `version` in yace-plugin.toml) to publish
+# dist/yace-biome-X.Y.Z.tar.gz and its SHA-256 as a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the manifest
+        run: |
+          v="$(sed -n 's/^version = "\(.*\)"/\1/p' yace-plugin.toml)"
+          [[ "v$v" == "$GITHUB_REF_NAME" ]] || { echo "tag $GITHUB_REF_NAME, manifest $v"; exit 1; }
+      - run: curl -fsSL https://abedmurrar.github.io/yace/install.sh | sudo sh
+      - run: scripts/package.sh
+      - run: yace --install-plugin dist/yace-biome-*.tar.gz --yes
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          sha256sum yace-biome-*.tar.gz > SHA256SUMS
+          cp yace-biome-*.tar.gz yace-biome.tar.gz
+          gh release create "$GITHUB_REF_NAME" yace-biome-*.tar.gz yace-biome.tar.gz SHA256SUMS \
+            --title "YACE Biome $GITHUB_REF_NAME" --notes "Install (YACE 0.13+): \`yace --install-plugin io.github.abedmurrar.yace-biome\`, or Extensions: Browse Plugins… in YACE. Needs Biome in the project (npm install --save-dev --save-exact @biomejs/biome) and a biome.json."

@@ -1,0 +1,20 @@
+id = "io.github.abedmurrar.yace-biome"
+name = "Biome"
+version = "0.1.0"
+description = "Biome in YACE: lint problems, quick fixes and formatting for JavaScript, TypeScript, JSON, CSS and GraphQL"
+publisher = "Abed Murrar"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/abedmurrar/yace-biome"
+yace = ">=0.13"
+external_programs = ["biome"]
+
+# Biome's own language server, from the project's node_modules first.
+# It starts only in projects with a Biome configuration file.
+[[lsp_servers]]
+name = "biome"
+command = "biome"
+args = ["lsp-proxy"]
+local_bin = true
+languages = ["javascript", "javascriptreact", "typescript", "typescriptreact", "json", "jsonc", "css", "graphql"]
+root_files = ["biome.json", "biome.jsonc"]
+install_hint = "npm install --save-dev --save-exact @biomejs/biome"
